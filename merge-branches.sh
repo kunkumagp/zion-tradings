@@ -127,6 +127,13 @@ merge_feature_branch() {
 
     echo "Merge process completed successfully!"
 
+    # Optional: Close related GitHub issues after successful merge
+    echo
+    read -p "Do you want to close any GitHub issues related to this merge? (y/n): " CLOSE_ISSUES
+    if [[ $CLOSE_ISSUES == "y" ]]; then
+        close_issues_after_merge "$TAG_NAME" "$BRANCH_TO_MERGE"
+    fi
+
     # ... rest of your existing code
     
     # echo "Feature branch merge completed!"
@@ -390,6 +397,135 @@ close_github_issue() {
         echo "Error: Failed to close issue #$ISSUE_NUMBER."
         return 1
     fi
+}
+
+# Function to close issues after successful merge
+close_issues_after_merge() {
+    local TAG_NAME="$1"
+    local BRANCH_NAME="$2"
+    
+    echo "=== Close Issues After Merge ==="
+    echo "Looking for issues related to branch: $BRANCH_NAME"
+    
+    # Check if GitHub CLI is installed
+    if ! command -v gh &> /dev/null; then
+        echo "GitHub CLI not found. Skipping issue closure."
+        return 1
+    fi
+    
+    # Check if user is authenticated
+    if ! gh auth status &> /dev/null; then
+        echo "Not authenticated with GitHub. Skipping issue closure."
+        return 1
+    fi
+    
+    # Show all open issues first
+    echo "Fetching all open issues..."
+    gh issue list --state open --limit 20
+    
+    if [ $? -ne 0 ]; then
+        echo "Error fetching issues. Skipping issue closure."
+        return 1
+    fi
+    
+    echo
+    echo "=== Issues potentially related to branch '$BRANCH_NAME' ==="
+    
+    # Search for issues that might be related to the branch
+    echo "Searching for issues mentioning '$BRANCH_NAME'..."
+    RELATED_ISSUES=$(gh issue list --state open --search "$BRANCH_NAME" --json number,title --jq '.[] | "\(.number): \(.title)"' 2>/dev/null)
+    
+    if [ -n "$RELATED_ISSUES" ]; then
+        echo "Found issues potentially related to branch '$BRANCH_NAME':"
+        echo "$RELATED_ISSUES"
+        echo
+        echo "Suggested issues to close based on branch name:"
+        SUGGESTED_NUMBERS=$(echo "$RELATED_ISSUES" | cut -d':' -f1 | tr '\n' ' ')
+        echo "Suggested issue numbers: $SUGGESTED_NUMBERS"
+    else
+        echo "No issues found specifically mentioning branch '$BRANCH_NAME'"
+    fi
+    
+    echo
+    echo "Select issues to close:"
+    echo "- Enter issue numbers separated by spaces (e.g., '1 5 7')"
+    echo "- Enter 'suggested' to use suggested issues: $SUGGESTED_NUMBERS"
+    echo "- Enter 'skip' to skip issue closure"
+    read ISSUES_TO_CLOSE
+    
+    # Handle different input options
+    if [ "$ISSUES_TO_CLOSE" = "skip" ] || [ -z "$ISSUES_TO_CLOSE" ]; then
+        echo "Skipping issue closure."
+        return 0
+    elif [ "$ISSUES_TO_CLOSE" = "suggested" ]; then
+        if [ -n "$SUGGESTED_NUMBERS" ]; then
+            ISSUES_TO_CLOSE="$SUGGESTED_NUMBERS"
+            echo "Using suggested issues: $ISSUES_TO_CLOSE"
+        else
+            echo "No suggested issues available. Skipping issue closure."
+            return 0
+        fi
+    fi
+    
+    # Generate automatic closing message with branch info
+    CLOSING_MESSAGE="Resolved in release $TAG_NAME (merged from branch: $BRANCH_NAME)"
+    echo "Default closing comment: '$CLOSING_MESSAGE'"
+    echo "Enter custom closing comment (or press Enter to use default):"
+    read CUSTOM_CLOSE_COMMENT
+    
+    if [ -n "$CUSTOM_CLOSE_COMMENT" ]; then
+        CLOSING_MESSAGE="$CUSTOM_CLOSE_COMMENT"
+    fi
+    
+    # Ask if user wants to test mode or actually close issues
+    echo
+    echo "Choose execution mode:"
+    echo "1. Actually close issues on GitHub"
+    echo "2. Test mode (simulate closure without making changes)"
+    read -p "Select mode (1 or 2): " EXECUTION_MODE
+    
+    if [ "$EXECUTION_MODE" = "2" ]; then
+        echo
+        echo "🎭 TEST MODE: Simulating issue closure..."
+        echo "Issues would be closed with message: '$CLOSING_MESSAGE'"
+        
+        # Simulate closing each specified issue
+        for ISSUE_NUM in $ISSUES_TO_CLOSE; do
+            if [[ $ISSUE_NUM =~ ^[0-9]+$ ]]; then
+                echo "🔄 [SIMULATION] Closing issue #$ISSUE_NUM..."
+                sleep 0.5  # Brief pause for realism
+                echo "✅ [SIMULATION] Issue #$ISSUE_NUM would be closed successfully!"
+            else
+                echo "⚠️  [SIMULATION] Invalid issue number: $ISSUE_NUM (would be skipped)"
+            fi
+        done
+        
+        echo
+        echo "🎉 TEST MODE COMPLETED: No actual changes were made to GitHub!"
+        echo "📝 Summary of what would have happened:"
+        echo "   - Message: '$CLOSING_MESSAGE'"
+        echo "   - Issues that would be closed: $ISSUES_TO_CLOSE"
+    else
+        # Actually close each specified issue
+        echo "Closing issues with message: '$CLOSING_MESSAGE'"
+        for ISSUE_NUM in $ISSUES_TO_CLOSE; do
+            if [[ $ISSUE_NUM =~ ^[0-9]+$ ]]; then
+                echo "Closing issue #$ISSUE_NUM..."
+                
+                if gh issue close $ISSUE_NUM --comment "$CLOSING_MESSAGE"; then
+                    echo "✅ Issue #$ISSUE_NUM closed successfully!"
+                else
+                    echo "❌ Failed to close issue #$ISSUE_NUM"
+                fi
+                
+                sleep 1  # Brief pause between closures
+            else
+                echo "⚠️  Invalid issue number: $ISSUE_NUM (skipping)"
+            fi
+        done
+    fi
+    
+    echo "Issue closure process completed for branch '$BRANCH_NAME'!"
 }
 
 # Main execution function
