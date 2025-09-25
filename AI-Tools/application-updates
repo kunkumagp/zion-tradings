@@ -1,0 +1,40 @@
+# Application Updates & Changes Log
+
+## Purpose
+This file tracks all updates and changes made to the application code, features, and functionality.
+
+---
+
+## Update History
+
+<!-- 
+🎯 AUTOMATIC RECORD KEEPING
+When you complete a task that modifies application code, add an entry below with:
+- Date completed
+- What was accomplished
+- Files created/modified
+- Features added/changed
+- AI assistance provided
+
+Template for entries:
+### YYYY-MM-DD - [Feature/Change Name]
+- ✅ **What Done**: Brief description
+- ✅ **Files Modified**: List of files changed
+- ✅ **Features Added**: New functionality
+- ✅ **AI Assistance**: What AI helped with
+-->
+
+### 2025-09-25 - Application Updates Tracking System
+- ✅ **What Done**: Separated application updates tracking from main AI-prompt file
+- ✅ **Files Created**: application-updates file
+- ✅ **Features Added**: Dedicated application change tracking system
+- ✅ **AI Assistance**: File structure reorganization and script modification
+
+---
+
+### 🔄 Current Session Tracking:
+<!-- Add current session application changes here, move to history when complete -->
+
+---
+
+*📊 **Application Stats**: Track your application development progress!*

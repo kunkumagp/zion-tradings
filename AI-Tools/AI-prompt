@@ -1,0 +1,61 @@
+# AI Context and Instructions
+
+## Project Overview
+This is a CodeIgniter 4 inventory management system with the following components:
+
+### Database Tables
+- **users**: User management with roles (admin, manager, trader, viewer) and authentication
+
+### Current Environment
+- PHP 8.4.1
+- CodeIgniter 4.6.3
+- MySQL database: inventory_system_db
+- Development server: http://localhost:8080
+
+### Project Structure
+- Database migrations in: app/Database/Migrations/
+- Models in: app/Models/
+- Controllers in: app/Controllers/
+- Views in: app/Views/
+
+## Current Status
+- ✅ Database setup complete
+- ✅ Users table created
+- ✅ User seeder created (admin + sample users)
+- ✅ Admin template integrated
+- ✅ Dashboard UI implemented
+- ✅ MySQL connection working
+- 🔄 Need to build: Authentication, CRUD operations, User management
+
+## Instructions for AI
+When I run "run prompt", please:
+1. Read this file for current project context
+2. Remember the project structure and current status
+3. Provide solutions consistent with CodeIgniter 4 best practices
+4. Consider the inventory management domain
+5. Suggest improvements or next steps when appropriate
+
+## Next Steps / TODO
+- [ ] Create User models
+- [ ] Build authentication system
+- [ ] Create CRUD controllers
+- [ ] Design UI/Views
+- [ ] Add inventory-related tables (products, categories, etc.)
+- [ ] Implement role-based access control
+
+## Notes
+- Using MySQL (not SQLite) for production readiness
+- Focus on inventory management features
+- Maintain clean, well-documented code
+- Follow CodeIgniter 4 conventions
+
+---
+
+## Change Tracking
+- **Application Changes**: See `application-updates` file for code/feature changes
+- **Database Changes**: See `database-updates` file for database modifications
+- This file focuses on project context and AI instructions only
+
+---
+
+*📊 **Project Context**: This file maintains the current project state for AI assistance*
