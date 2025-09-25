@@ -66,6 +66,22 @@ merge_feature_branch() {
     git push -u origin $BRANCH_TO_MERGE || exit 1
     echo "Merging $BRANCH_TO_MERGE to $DEV_BRANCH..."
     git checkout $DEV_BRANCH || exit 1
+    
+    # Ensure dev branch is up to date with remote before proceeding
+    echo "Synchronizing $DEV_BRANCH with remote..."
+    git fetch origin $DEV_BRANCH || exit 1
+    
+    # Check if local dev branch is behind remote
+    LOCAL_DEV=$(git rev-parse $DEV_BRANCH)
+    REMOTE_DEV=$(git rev-parse origin/$DEV_BRANCH)
+    
+    if [ "$LOCAL_DEV" != "$REMOTE_DEV" ]; then
+        echo "Local $DEV_BRANCH is not in sync with remote. Pulling latest changes..."
+        git pull origin $DEV_BRANCH || exit 1
+    else
+        echo "$DEV_BRANCH is up to date with remote."
+    fi
+    
     # git reset --soft $(git merge-base $DEV_BRANCH $DEV_BRANCH)
     
     # Rebase dev branch onto the BRANCH_TO_MERGE point
@@ -83,7 +99,11 @@ merge_feature_branch() {
     sleep 1
     
     echo "Pushing merged changes to remote $DEV_BRANCH..."
-    git push origin $DEV_BRANCH || exit 1
+    # Use force-with-lease for safer forced push after rebase
+    git push --force-with-lease origin $DEV_BRANCH || {
+        echo "Failed to push with force-with-lease. Trying regular push..."
+        git push origin $DEV_BRANCH || exit 1
+    }
 
     echo "Merging $DEV_BRANCH into $MAIN_BRANCH..."
     
@@ -93,6 +113,21 @@ merge_feature_branch() {
     # Merge dev branch into main branch
     echo "Switching to branch $MAIN_BRANCH..."
     git checkout $MAIN_BRANCH || exit 1
+
+    # Ensure main branch is up to date with remote before proceeding
+    echo "Synchronizing $MAIN_BRANCH with remote..."
+    git fetch origin $MAIN_BRANCH || exit 1
+    
+    # Check if local main branch is behind remote
+    LOCAL_MAIN=$(git rev-parse $MAIN_BRANCH)
+    REMOTE_MAIN=$(git rev-parse origin/$MAIN_BRANCH)
+    
+    if [ "$LOCAL_MAIN" != "$REMOTE_MAIN" ]; then
+        echo "Local $MAIN_BRANCH is not in sync with remote. Pulling latest changes..."
+        git pull origin $MAIN_BRANCH || exit 1
+    else
+        echo "$MAIN_BRANCH is up to date with remote."
+    fi
 
     # Wait for one second
     sleep 1
