@@ -420,6 +420,11 @@ close_github_issue() {
     # Close the issue
     echo "Closing issue #$ISSUE_NUMBER..."
     
+    # First add the "done" label
+    echo "Adding 'done' label to issue #$ISSUE_NUMBER..."
+    gh issue edit $ISSUE_NUMBER --add-label "done" 2>/dev/null || echo "Note: Could not add 'done' label (label might not exist)"
+    
+    # Then close the issue with comment
     if [ -n "$CLOSE_COMMENT" ]; then
         gh issue close $ISSUE_NUMBER --comment "$CLOSE_COMMENT"
     else
@@ -427,7 +432,7 @@ close_github_issue() {
     fi
     
     if [ $? -eq 0 ]; then
-        echo "Issue #$ISSUE_NUMBER closed successfully!"
+        echo "Issue #$ISSUE_NUMBER closed successfully with 'done' label!"
     else
         echo "Error: Failed to close issue #$ISSUE_NUMBER."
         return 1
@@ -527,9 +532,11 @@ close_issues_after_merge() {
         # Simulate closing each specified issue
         for ISSUE_NUM in $ISSUES_TO_CLOSE; do
             if [[ $ISSUE_NUM =~ ^[0-9]+$ ]]; then
+                echo "🔄 [SIMULATION] Adding 'done' label to issue #$ISSUE_NUM..."
+                sleep 0.3
                 echo "🔄 [SIMULATION] Closing issue #$ISSUE_NUM..."
                 sleep 0.5  # Brief pause for realism
-                echo "✅ [SIMULATION] Issue #$ISSUE_NUM would be closed successfully!"
+                echo "✅ [SIMULATION] Issue #$ISSUE_NUM would be closed successfully with 'done' label!"
             else
                 echo "⚠️  [SIMULATION] Invalid issue number: $ISSUE_NUM (would be skipped)"
             fi
@@ -539,16 +546,19 @@ close_issues_after_merge() {
         echo "🎉 TEST MODE COMPLETED: No actual changes were made to GitHub!"
         echo "📝 Summary of what would have happened:"
         echo "   - Message: '$CLOSING_MESSAGE'"
+        echo "   - Label: 'done' would be added to all issues"
         echo "   - Issues that would be closed: $ISSUES_TO_CLOSE"
     else
         # Actually close each specified issue
         echo "Closing issues with message: '$CLOSING_MESSAGE'"
         for ISSUE_NUM in $ISSUES_TO_CLOSE; do
             if [[ $ISSUE_NUM =~ ^[0-9]+$ ]]; then
-                echo "Closing issue #$ISSUE_NUM..."
+                echo "Adding 'done' label to issue #$ISSUE_NUM..."
+                gh issue edit $ISSUE_NUM --add-label "done" 2>/dev/null || echo "Note: Could not add 'done' label to issue #$ISSUE_NUM"
                 
+                echo "Closing issue #$ISSUE_NUM..."
                 if gh issue close $ISSUE_NUM --comment "$CLOSING_MESSAGE"; then
-                    echo "✅ Issue #$ISSUE_NUM closed successfully!"
+                    echo "✅ Issue #$ISSUE_NUM closed successfully with 'done' label!"
                 else
                     echo "❌ Failed to close issue #$ISSUE_NUM"
                 fi
