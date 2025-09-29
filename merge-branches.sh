@@ -395,8 +395,13 @@ close_github_issue() {
     fi
     
     # Check if user is authenticated
-    if ! gh auth status &> /dev/null; then
-        echo "Error: Not authenticated with GitHub CLI."
+    echo "Checking GitHub CLI authentication..."
+    if gh auth status &> /dev/null; then
+        echo "✅ GitHub CLI authentication verified."
+    else
+        echo "❌ Not authenticated with GitHub CLI."
+        echo "Current authentication status:"
+        gh auth status 2>&1 || true
         echo "Please run 'gh auth login' first."
         return 1
     fi
@@ -454,8 +459,14 @@ close_issues_after_merge() {
     fi
     
     # Check if user is authenticated
-    if ! gh auth status &> /dev/null; then
-        echo "Not authenticated with GitHub. Skipping issue closure."
+    echo "Checking GitHub CLI authentication..."
+    if gh auth status &> /dev/null; then
+        echo "✅ GitHub CLI authentication verified."
+    else
+        echo "❌ Not authenticated with GitHub. Please run 'gh auth login' first."
+        echo "Current authentication status:"
+        gh auth status 2>&1 || true
+        echo "Skipping issue closure."
         return 1
     fi
     
